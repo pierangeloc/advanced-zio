@@ -30,7 +30,7 @@ object SimplestSpec extends DefaultRunnableSpec {
   /**
    * EXERCISE
    *
-   * Using sbt or your IDE, run `SpecBasics` by using its `main` function (not the test runner).
+   * Using sbt or your IDE, run `SimplestSpec` by using its `main` function (not the test runner).
    */
   def spec = suite("SimplestSpec")()
 }
@@ -66,7 +66,7 @@ object BasicAssertions extends DefaultRunnableSpec {
        *
        * Using `assertTrue`, assert that 2 + 2 == 4.
        */
-      assertTrue(false)
+      assertTrue(2 + 2 == 4)
     } +
       test("sherlock misspelling") {
 
@@ -75,7 +75,7 @@ object BasicAssertions extends DefaultRunnableSpec {
          *
          * Examine the output of this failed test. Then fix the test so that it passes.
          */
-        assertTrue("sherlock".contains("sure"))
+        assertTrue("sherlock".contains("sher"))
       } +
       test("multiple assertions") {
         val string = "cannac"
@@ -90,7 +90,11 @@ object BasicAssertions extends DefaultRunnableSpec {
          *  - the string starts with "can"
          *  - the reverse of the string is equal to itself
          */
-        assertTrue(false)
+        assertTrue(string.length == 6) && assertTrue(string.startsWith("can")) && assertTrue(string.reverse == string)
+      } +
+      test("buildings contain a needle") {
+        val allContents = buildings.flatMap(_.contents.split(", ").toList)
+        assertTrue(allContents.contains("needle"))
       }
     /**
    * EXERCISE
@@ -99,6 +103,7 @@ object BasicAssertions extends DefaultRunnableSpec {
    * `test`, as above. This test should verify that the contents of one
    * of the buildings in `buildings` contains a `needle`.
    */
+
   }
 }
 
@@ -121,7 +126,7 @@ object BasicAssertionsZIO extends DefaultRunnableSpec {
       for {
         ref <- Ref.make(0)
         v   <- ref.updateAndGet(_ + 1)
-      } yield assertTrue(false)
+      } yield assertTrue(v == 1)
     } +
       test("multiple assertions") {
 
@@ -137,8 +142,9 @@ object BasicAssertionsZIO extends DefaultRunnableSpec {
         for {
           ref  <- Ref.make(0)
           rand <- Random.nextIntBetween(1, 4)
-          v    <- ref.updateAndGet(_ + 1).repeatN(rand * 2)
-        } yield assertTrue(false)
+          _    <- Console.printLine(s"Generated Rand = $rand")
+          v    <- ref.updateAndGet(_ + 1).repeatN(rand * 2 - 1)
+        } yield assertTrue(v > 0) && assertTrue(v % 2 == 0)
       }
   }
 }
