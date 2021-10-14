@@ -155,7 +155,7 @@ object BasicAssertionsZIO extends DefaultRunnableSpec {
  * ZIO Test offers _test aspects_, which are values that allow modifying specs,
  * whether suites or individual tests. Test aspects are kind of like annotations,
  * except they are type-safe, non-magical, and first class values that can be
- * trasnformed and composed with other test aspects.
+ * transformed and composed with other test aspects.
  *
  * Test aspects can add features like retrying tests, ignoring tests, running
  * tests only on a certain platform, and so forth.
@@ -173,7 +173,7 @@ object BasicTestAspects extends DefaultRunnableSpec {
        * the failure is ignored.
        */
       assertTrue(false)
-    } +
+    }  @@ ignore +
       test("flaky") {
 
         /**
@@ -183,9 +183,10 @@ object BasicTestAspects extends DefaultRunnableSpec {
          * long as it sometimes succeeds.
          */
         for {
-          number <- Random.nextInt
-        } yield assertTrue(number % 2 == 0)
-      } +
+          number <- Live.live(Random.nextInt)
+          _      <- Console.printLine(s"number = $number")
+        } yield assertTrue(number % 2 == 1)
+      } @@ flaky +
       test("nonFlaky") {
 
         /**
@@ -197,7 +198,7 @@ object BasicTestAspects extends DefaultRunnableSpec {
         for {
           number <- Random.nextIntBetween(0, 100)
         } yield assertTrue(number * 2 % 2 == 0)
-      } +
+      } @@ nonFlaky +
       /**
        * EXERCISE
        *
@@ -216,7 +217,7 @@ object BasicTestAspects extends DefaultRunnableSpec {
               _ <- Console.printLine("Test 2")
             } yield assertTrue(true)
           }
-      }
+      } @@ sequential
   }
 }
 
@@ -246,7 +247,7 @@ object TestFixtures extends DefaultRunnableSpec {
       for {
         value <- UIO(beforeRef.get)
       } yield assertTrue(value > 0)
-    } @@ ignore +
+    } @@ before(Console.printLine("Printing before") *> incBeforeRef) +
       /**
        * EXERCISE
        *
@@ -257,7 +258,7 @@ object TestFixtures extends DefaultRunnableSpec {
         for {
           _ <- Console.printLine("after")
         } yield assertTrue(true)
-      } @@ ignore +
+      } @@ after(Console.printLine("Done with after")) +
       /**
        * EXERCISE
        *
@@ -268,7 +269,7 @@ object TestFixtures extends DefaultRunnableSpec {
         for {
           value <- UIO(aroundRef.get)
         } yield assertTrue(value == 1)
-      } @@ ignore
+      } @@ around(UIO(aroundRef.incrementAndGet()), UIO(aroundRef.decrementAndGet()))
   }
 }
 
