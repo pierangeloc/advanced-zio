@@ -294,20 +294,22 @@ object TestServices extends DefaultRunnableSpec {
       test("TestClock") {
         for {
           fiber <- Clock.sleep(1.second).as(42).fork
+          _     <- TestClock.adjust(1500.milliseconds)
           value <- fiber.join
         } yield assertTrue(value == 42)
-      } @@ ignore +
+      } +
         /**
          * EXERCISE
          *
-         * Using `TestSystem.setEnv`, set an environment variable to make the
+         * Using `TestSystem.putEnv`, set an environment variable to make the
          * test pass.
          */
         test("TestSystem") {
           for {
+            _    <- TestSystem.putEnv("name", "Sherlock Holmes")
             name <- System.env("name").some
           } yield assertTrue(name == "Sherlock Holmes")
-        } @@ ignore +
+        } +
         /**
          * EXERCISE
          *
@@ -317,9 +319,10 @@ object TestServices extends DefaultRunnableSpec {
         test("TestConsole") {
           for {
             _    <- Console.printLine("What is your name?")
+            _    <- TestConsole.feedLines("Sherlock Holmes")
             name <- Console.readLine
           } yield assertTrue(name == "Sherlock Holmes")
-        } @@ ignore +
+        } +
         /**
          * EXERCISE
          *
@@ -336,7 +339,7 @@ object TestServices extends DefaultRunnableSpec {
             result <- if (guess == number.toString) Console.printLine("Good job!").as(true)
                      else Console.printLine("Try again!").as(false)
           } yield assertTrue(result)
-        } @@ ignore +
+        } +
         /**
          * EXERCISE
          *
@@ -347,9 +350,9 @@ object TestServices extends DefaultRunnableSpec {
          */
         test("Live") {
           for {
-            now <- Clock.instant.map(_.getEpochSecond())
+            now <- Live.live(Clock.instant.map(_.getEpochSecond()))
           } yield assertTrue(now > 0)
-        } @@ ignore
+        }
     }
 }
 
