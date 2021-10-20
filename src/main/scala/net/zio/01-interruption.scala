@@ -50,8 +50,8 @@ object InterruptGuarantees extends DefaultRunnableSpec {
         _       <- latch.await // await until fiber starts before interrupting
         _       <- fiber.interrupt
         v       <- ref.get
-      } yield assertTrue(v == 0)
-    } @@ ignore +
+      } yield assertTrue(v == 1)
+    } +
       test("onExit") {
 
         /**
@@ -67,14 +67,14 @@ object InterruptGuarantees extends DefaultRunnableSpec {
           _       <- latch.await // await until fiber starts before interrupting
           _       <- fiber.interrupt
           exit    <- promise.await
-        } yield assertTrue(false)
-      } @@ ignore +
+        } yield assertTrue(exit.interrupted)
+      } +
       test("acquireRelease") {
         import java.net.Socket
 
-        def acquireSocket: UIO[Socket]              = ZIO.never
-        def releaseSocket(socket: Socket): UIO[Any] = ZIO.attemptBlockingIO(socket.close()).orDie
-        def useSocket(socket: Socket): UIO[Int]     = ZIO.attemptBlockingIO(socket.getInputStream().read()).orDie
+        def acquireSocket: UIO[Socket]              = ZIO.succeedBlocking(println("Acquiring socket...")) *> ZIO.never
+        def releaseSocket(socket: Socket): UIO[Any] = ZIO.succeedBlocking(println("Releasing socket...")) *> ZIO.attemptBlockingIO(socket.close()).orDie
+        def useSocket(socket: Socket): UIO[Int]     = ZIO.succeedBlocking(println("Using socket..."))     *> ZIO.attemptBlockingIO(socket.getInputStream().read()).orDie
 
         /**
          * EXERCISE
@@ -86,7 +86,7 @@ object InterruptGuarantees extends DefaultRunnableSpec {
           latch <- Promise.make[Nothing, Unit]
           fiber <- (latch.succeed(()) *> acquireSocket).acquireReleaseWith(releaseSocket(_))(useSocket(_)).forkDaemon
           value <- latch.await *> Live.live(fiber.join.disconnect.timeout(1.second))
-        } yield assertTrue(value == Some(42))
+        } yield assertTrue(value == None)
       }
   }
 }
@@ -104,11 +104,11 @@ object InterruptibilityRegions extends DefaultRunnableSpec {
       for {
         ref   <- Ref.make(0)
         latch <- Promise.make[Nothing, Unit]
-        fiber <- (latch.succeed(()) *> Live.live(ZIO.sleep(10.millis)) *> ref.update(_ + 1)).forkDaemon
+        fiber <- (latch.succeed(()) *> Live.live(ZIO.sleep(10.millis)) *> ref.update(_ + 1)).uninterruptible.forkDaemon
         _     <- latch.await *> fiber.interrupt
         value <- ref.get
       } yield assertTrue(value == 1)
-    } @@ ignore +
+    } +
       test("interruptible") {
 
         /**
@@ -121,11 +121,11 @@ object InterruptibilityRegions extends DefaultRunnableSpec {
 
           ref   <- Ref.make(0)
           latch <- Promise.make[Nothing, Unit]
-          fiber <- ZIO.uninterruptible(latch.succeed(()) *> ZIO.never).ensuring(ref.update(_ + 1)).forkDaemon
+          fiber <- ZIO.uninterruptible(latch.succeed(()) *> ZIO.never.interruptible).ensuring(ref.update(_ + 1)).forkDaemon
           _     <- Live.live(latch.await *> fiber.interrupt.disconnect.timeout(1.second))
           value <- ref.get
         } yield assertTrue(value == 1)
-      } @@ ignore
+      }
   }
 }
 
