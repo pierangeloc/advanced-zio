@@ -70,10 +70,10 @@ object FiberDumps extends DefaultRunnableSpec {
 
 object Logging extends DefaultRunnableSpec {
   def spec =
-    suite("Logging")()
+    suite("Logging")(test("empty"){assertTrue(true)})
 }
 
 object Metrics extends DefaultRunnableSpec {
   def spec =
-    suite("Metrics")()
+    suite("Metrics")(test("empty"){assertTrue(true)})
 }

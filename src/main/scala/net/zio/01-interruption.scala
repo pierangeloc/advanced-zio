@@ -156,8 +156,8 @@ object Backpressuring extends DefaultRunnableSpec {
           _     <- left.zipPar(right).ignore
           end   <- Clock.instant
           delta = end.getEpochSecond() - start.getEpochSecond()
-        } yield assertTrue(delta < 1))
-      } @@ ignore +
+        } yield assertTrue(delta == 1))
+      } +
         /**
          * EXERCISE
          *
@@ -168,7 +168,7 @@ object Backpressuring extends DefaultRunnableSpec {
         test("disconnect") {
           Live.live(for {
             ref <- Ref.make(true)
-            _   <- (ZIO.sleep(5.seconds) *> ref.set(false)).uninterruptible.timeout(10.millis)
+            _   <- (ZIO.sleep(5.seconds) *> ref.set(false)).uninterruptible.disconnect.timeout(10.millis)
             v   <- ref.get
           } yield assertTrue(v))
         }
@@ -192,7 +192,16 @@ object BasicDerived extends DefaultRunnableSpec {
        */
       test("ensuring") {
         def withFinalizer[R, E, A](zio: ZIO[R, E, A])(finalizer: UIO[Any]): ZIO[R, E, A] =
-          zio <* finalizer
+          zio.foldCauseZIO(cause => {
+            println(s"Cause: $cause; interrupted: ${cause.interrupted}")
+            if (cause.interrupted) {
+              println("EEEEESTIKAATZI....")
+              ZIO.succeed(println("Running Finalizer")) *> finalizer *> ZIO.failCause(cause)
+            } else ZIO.failCause(cause)
+          },
+            a => ZIO.succeed(a)
+
+          )
 
         for {
           latch   <- Promise.make[Nothing, Unit]
@@ -203,7 +212,7 @@ object BasicDerived extends DefaultRunnableSpec {
           _       <- fiber.interrupt
           v       <- ref.get
         } yield assertTrue(v)
-      } @@ ignore +
+      } +
         /**
          * EXERCISE
          *
@@ -227,7 +236,7 @@ object BasicDerived extends DefaultRunnableSpec {
             _ <- fiber.interrupt
             v <- ref.get
           } yield assertTrue(v)
-        }
+        } @@ ignore
     }
 }
 

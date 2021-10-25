@@ -258,5 +258,5 @@ object HubBasics extends DefaultRunnableSpec {
  */
 object Graduation extends DefaultRunnableSpec {
   def spec =
-    suite("Graduation")()
+    suite("Graduation")(test("empty"){assertTrue(true)})
 }

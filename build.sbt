@@ -1,4 +1,4 @@
-val ZIOVersion = "2.0.0-M2"
+val ZIOVersion = "2.0.0-M4"
 
 lazy val root = project
   .in(file("."))
@@ -10,7 +10,8 @@ lazy val root = project
       """|import zio._
          |import zio.Console._
          |implicit class RunSyntax[E, A](io: ZIO[ZEnv, E, A]){ def unsafeRun: A = Runtime.default.unsafeRun(io) }
-    """.stripMargin
+    """.stripMargin,
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   )
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
@@ -24,13 +25,18 @@ libraryDependencies ++= Seq(
   "dev.zio" %% "zio"          % ZIOVersion,
   "dev.zio" %% "zio-streams"  % ZIOVersion,
   "dev.zio" %% "zio-test"     % ZIOVersion,
+  "org.typelevel" %% "cats-effect" % "3.2.9",
   "dev.zio" %% "zio-test"     % ZIOVersion % "test",
   "dev.zio" %% "zio-test-sbt" % ZIOVersion % "test",
+  "io.github.dimitarg"  %%  "weaver-test-extra" % "0.4.6" % "test",
   // URL parsing
   "io.lemonlabs" %% "scala-uri" % "1.4.1"
 )
 
-testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+testFrameworks := Seq(
+  new TestFramework("zio.test.sbt.ZTestFramework"),
+  new TestFramework("weaver.framework.TestFramework")
+)
 
 scalacOptions in Compile in console := Seq(
   "-Ypartial-unification",

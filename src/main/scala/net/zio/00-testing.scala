@@ -32,7 +32,7 @@ object SimplestSpec extends DefaultRunnableSpec {
    *
    * Using sbt or your IDE, run `SimplestSpec` by using its `main` function (not the test runner).
    */
-  def spec = suite("SimplestSpec")()
+  def spec: ZSpec[Environment, Failure] = suite("SimplestSpec")(test("empty"){assertTrue(true)})
 }
 
 /**
@@ -43,7 +43,7 @@ object SimplestSpec extends DefaultRunnableSpec {
  * which compose using a variety of operators.
  */
 object BasicAssertions extends DefaultRunnableSpec {
-  def spec = suite("BasicAssertions") {
+  def spec: ZSpec[Environment, Failure] = suite("BasicAssertions") {
     trait Building {
       def contents: String
     }
@@ -370,7 +370,7 @@ object IntegrationSystem extends DefaultRunnableSpec {
    * Explore jvmOnly, windows, linux, ifEnv, and other test aspects that
    * are useful for running platform-specific or integration / system tests.
    */
-  def spec = suite("IntegrationSystem")()
+  def spec = suite("IntegrationSystem")(test("empty"){assertTrue(true)})
 }
 
 /**
@@ -425,7 +425,7 @@ object CustomLayers extends DefaultRunnableSpec {
    */
   lazy val testUserRepo: ULayer[Has[UserRepo]] = ???
 
-  def spec =
+  def spec: ZSpec[Environment, Failure] =
     suite("CustomLayers") {
       test("provideCustomLayer") {
 
@@ -480,5 +480,5 @@ object CustomLayers extends DefaultRunnableSpec {
  *
  */
 object Graduation extends DefaultRunnableSpec {
-  def spec = suite("Graduation")()
+  def spec = suite("Graduation")(test("empty"){assertTrue(true)})
 }

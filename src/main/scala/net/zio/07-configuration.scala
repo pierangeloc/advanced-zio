@@ -13,7 +13,6 @@ package zio.advancedzio.config
 
 import zio._
 import zio.internal.Platform
-
 import zio.test._
 import zio.test.TestAspect._
 
@@ -21,7 +20,7 @@ import scala.concurrent.ExecutionContext
 import java.util.concurrent.atomic.AtomicReference
 
 object RuntimeSpec extends DefaultRunnableSpec {
-  def spec =
+  def spec: ZSpec[Environment, Failure] =
     suite("RuntimeSpec") {
 
       /**
@@ -62,7 +61,6 @@ object RuntimeSpec extends DefaultRunnableSpec {
          * Tweak the runtime config so that tracing is disabled.
          */
         test("Tracing.disabled") {
-          import zio.internal.Tracing
 
           val effect =
             for {
@@ -239,12 +237,12 @@ object RuntimeSpec extends DefaultRunnableSpec {
                 else ZIO.succeed("Time to live!") *> ZIO.succeed(succeeded.set(true))
           } yield count
 
-        lazy val runtime = Runtime((), Platform.default.copy(reportFailure = _ => ()))
+        lazy val runtime = Runtime((), RuntimeConfig.default.copy(reportFatal = e => throw e))
 
         lazy val supervisor: Supervisor[Unit] = new Supervisor[Unit] {
           @volatile var lastEffect = ZIO.unit
 
-          def value: UIO[Unit] = ZIO.unit
+          def value(implicit trace: ZTraceElement): UIO[Unit] = ZIO.unit
 
           def unsafeOnStart[R, E, A](
             environment: R,
